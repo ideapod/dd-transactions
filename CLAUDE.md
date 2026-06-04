@@ -4,44 +4,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A MERN-stack app for **data-driven transactions** — forms whose fields are defined by schemas stored in MongoDB (Amazon DocumentDB). Users create **transaction definitions** (TxnDefs) that contain a `@data-driven-forms` schema, then fill out **transactions** whose fields are dynamically rendered from those schemas.
+A MERN-stack app for **data-driven transactions** — forms whose fields are defined by schemas stored in MongoDB. Users create **transaction definitions** (TxnDefs) that contain a `@data-driven-forms` schema, then fill out **transactions** whose fields are dynamically rendered from those schemas.
 
-The app was developed in an AWS Cloud9 environment and targets an Amazon DocumentDB cluster.
+Originally developed in AWS Cloud9 against Amazon DocumentDB; migrated to self-hosted MongoDB running in Docker.
 
 ## Project Layout
 
 ```
 mern/
-  client/   React + Vite frontend (port 5173 dev)
+  client/   React + Vite frontend (port 8081)
   server/   Express backend (port 5050)
+mongo/
+  restore.sh   Auto-runs mongorestore on first container start
+dump/
+  employees/   mongodump of the live data (txndefs, transactions, records)
 ```
 
 ## Commands
 
-### Server
+### Docker (preferred for local dev)
+```bash
+docker compose up --build          # build and start all services
+docker compose up --build client   # rebuild only the client (e.g. after npm install)
+docker compose down -v             # stop and wipe volumes (requires data restore after)
+
+# Restore data after first start or after down -v
+docker compose exec mongo mongorestore --noOptionsRestore --gzip /dump
+```
+
+### Server (without Docker)
 ```bash
 cd mern/server
 npm install
-node --env-file=config.env server.js   # start server
+node --env-file=config.env server.js
 ```
 
-### Client
+### Client (without Docker)
 ```bash
 cd mern/client
 npm install
-npm run dev       # dev server
+npm run dev       # dev server on port 8081
 npm run build     # production build
 npm run lint      # ESLint
 ```
 
 No test runner is configured for either package.
 
-## Environment & Database
+## Environment
 
-The server reads `mern/server/config.env` for `DOCDB_URI` and `PORT`. The connection uses TLS with `global-bundle.pem` (Amazon DocumentDB CA bundle) located in `mern/server/`.
+### Server
+Reads `mern/server/config.env` for `MONGO_URI` and `PORT`. In Docker, these are injected via `docker-compose.yml` and `config.env` is not used.
 
-Database: `employees`  
+### Client
+API base URL is set via `VITE_SERVER_URL` (e.g. `http://localhost:5050`). Falls back to `http://localhost:5050` if unset. In Docker this is passed as an environment variable in `docker-compose.yml`. Vite bakes this into the bundle at startup — changing it requires a container restart.
+
+## Database
+
+MongoDB database: `employees`
 Collections: `txndefs`, `transactions`, `records`
+
+The `dump/` directory contains a `mongodump` of the original DocumentDB data. Restore with `--noOptionsRestore --gzip` to skip DocumentDB-specific metadata and handle compressed files.
 
 ## Architecture
 
@@ -49,7 +71,7 @@ Collections: `txndefs`, `transactions`, `records`
 
 **TxnDef** (`txndefs` collection):
 - `name`, `version` — metadata
-- `schema` — a `@data-driven-forms` schema object (JSON), defines the fields for a form
+- `schema` — a `@data-driven-forms` schema object, defines the fields for a form
 
 **Transaction** (`transactions` collection):
 - `schema_id` — ObjectId reference to a TxnDef
@@ -75,9 +97,9 @@ Collections: `txndefs`, `transactions`, `records`
 2. Passes `txndef.schema` to `@data-driven-forms` `FormRenderer`, which dynamically renders the form fields
 3. On submit, writes the form values to the `transactions` collection via the REST API
 
-### API Base URL
+### JSON Schema Editor
 
-Both `TransactionForm` and `TxnDefForm` hardcode `serverURL = "http://52.62.121.255:8080"` — this is the EC2 instance address. Change this if the server moves.
+`TxnDefForm` uses `@uiw/react-codemirror` with `@codemirror/lang-json` for editing schemas. The schema is stored as a JS object in state; it is serialised with `JSON.stringify` when passed to the editor and parsed with `JSON.parse` on change (errors are silently swallowed while the user is mid-edit).
 
 ### Backend Routes
 

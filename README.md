@@ -1,14 +1,69 @@
-         ___        ______     ____ _                 _  ___  
-        / \ \      / / ___|   / ___| | ___  _   _  __| |/ _ \ 
-       / _ \ \ /\ / /\___ \  | |   | |/ _ \| | | |/ _` | (_) |
-      / ___ \ V  V /  ___) | | |___| | (_) | |_| | (_| |\__, |
-     /_/   \_\_/\_/  |____/   \____|_|\___/ \__,_|\__,_|  /_/ 
- ----------------------------------------------------------------- 
+# Data-Driven Transactions
 
+A MERN-stack app for building and filling dynamic forms. You define a **transaction definition** (TxnDef) by writing a `@data-driven-forms` JSON schema, then create **transactions** by filling out the form that schema generates. No code changes needed to add a new form type — just create a new TxnDef.
 
-Hi there! Welcome to AWS Cloud9!
+## Stack
 
-To get started, create some files, play with the terminal,
-or visit https://docs.aws.amazon.com/console/cloud9/ for our documentation.
+- **Frontend:** React + Vite, MUI, `@data-driven-forms`, CodeMirror 6
+- **Backend:** Express (Node.js)
+- **Database:** MongoDB
 
-Happy coding!
+## Running locally with Docker
+
+```bash
+docker compose up --build
+```
+
+- Client: http://localhost:8081
+- Server: http://localhost:5050
+
+On first run, MongoDB starts empty. Restore the included data dump:
+
+```bash
+docker compose exec mongo mongorestore --noOptionsRestore --gzip /dump
+```
+
+> If you've previously run `docker compose down -v`, the volume is wiped and you'll need to restore again.
+
+## Running without Docker
+
+### Server
+```bash
+cd mern/server
+npm install
+node --env-file=config.env server.js
+```
+
+### Client
+```bash
+cd mern/client
+npm install
+npm run dev
+```
+
+Set `VITE_SERVER_URL` in your environment (or a `.env` file in `mern/client/`) to point at the server:
+```
+VITE_SERVER_URL=http://localhost:5050
+```
+
+## Project structure
+
+```
+mern/
+  client/       React + Vite frontend (port 8081)
+  server/       Express backend (port 5050)
+    db/         MongoDB connection
+    routes/     REST routes: /record, /txndef, /transaction
+mongo/
+  restore.sh    Runs mongorestore on first container start
+dump/
+  employees/    mongodump of txndefs, transactions, records collections
+```
+
+## How it works
+
+1. Create a **TxnDef** at `/txndefs/create` — give it a name, version, and a `@data-driven-forms` schema (JSON)
+2. From the TxnDef list, click **Create Transaction** to fill out the generated form
+3. Submitted transactions are stored with a reference back to their TxnDef schema
+
+The `@data-driven-forms` schema format is documented at https://data-driven-forms.org/
