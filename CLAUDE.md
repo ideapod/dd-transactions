@@ -101,6 +101,20 @@ The `dump/` directory contains a `mongodump` of the original DocumentDB data. Re
 
 `TxnDefForm` uses `@uiw/react-codemirror` with `@codemirror/lang-json` for editing schemas. The schema is stored as a JS object in state; it is serialised with `JSON.stringify` when passed to the editor and parsed with `JSON.parse` on change (errors are silently swallowed while the user is mid-edit).
 
+### MUI Theme
+
+A custom MUI theme is defined in `mern/client/src/theme.js` and applied via `ThemeProvider` in `main.jsx`. It styles all `@data-driven-forms/mui-component-mapper` form fields automatically. Design tokens are sourced from the VIC government design system (`service.vic.gov.au`):
+
+| Token | Value |
+|---|---|
+| Primary (orange) | `#e3710a` |
+| Primary hover | `#9d5b00` |
+| Body text | `#3c4a60` |
+| Font | Verdana, Helvetica, sans-serif |
+| Border radius | 2px |
+
+To adjust the form appearance, edit `theme.js` — changes cascade to all MUI components including form fields, buttons, and labels.
+
 ### Backend Routes
 
 All routes follow standard REST CRUD on their collections:

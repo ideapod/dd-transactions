@@ -1,6 +1,5 @@
 import React from 'react';
 import { useState, useEffect } from "react";
-import Grid from '@mui/material/Grid';
 import FormRenderer from '@data-driven-forms/react-form-renderer/form-renderer';
 import { componentMapper, FormTemplate } from '@data-driven-forms/mui-component-mapper';
 import { useParams, useNavigate } from "react-router-dom";
@@ -235,18 +234,19 @@ function TransactionForm() {
   }
   
   
-  return (<Grid spacing={4} container>
-    <FormRenderer
-      componentMapper={componentMapper}
-      FormTemplate={FormTemplateCanReset}
-      // schema={newschema || schema}
-      schema={schema}
-      onSubmit={onSubmit}
-      onCancel={() => navigate("/transactions")}
-      initialValues= {txndata.data}
-      validatorMapper={validatorMapper}
-    />
-  </Grid>)
+  return (
+    <div style={{ maxWidth: 640, padding: '24px 0' }}>
+      <FormRenderer
+        componentMapper={componentMapper}
+        FormTemplate={FormTemplateCanReset}
+        schema={schema}
+        onSubmit={onSubmit}
+        onCancel={() => navigate("/transactions")}
+        initialValues={txndata.data}
+        validatorMapper={validatorMapper}
+      />
+    </div>
+  )
 }
   
 /*

@@ -4,7 +4,7 @@ A MERN-stack app for building and filling dynamic forms. You define a **transact
 
 ## Stack
 
-- **Frontend:** React + Vite, MUI, `@data-driven-forms`, CodeMirror 6
+- **Frontend:** React + Vite, MUI (themed to VIC government design system), `@data-driven-forms`, CodeMirror 6
 - **Backend:** Express (Node.js)
 - **Database:** MongoDB
 
@@ -67,3 +67,7 @@ dump/
 3. Submitted transactions are stored with a reference back to their TxnDef schema
 
 The `@data-driven-forms` schema format is documented at https://data-driven-forms.org/
+
+## Styling
+
+Form fields are rendered by `@data-driven-forms/mui-component-mapper` and styled via a custom MUI theme (`mern/client/src/theme.js`) based on the [VIC government design system](https://service.vic.gov.au). Primary colour is `#e3710a` (orange), body text is `#3c4a60` (dark blue-grey). To adjust the form appearance, edit `theme.js`.
