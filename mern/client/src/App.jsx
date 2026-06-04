@@ -3,9 +3,11 @@ import Navbar from "./components/Navbar";
 
 const App = () => {
   return (
-    <div className="w-full p-6">
+    <div className="flex min-h-screen">
       <Navbar />
-      <Outlet />
+      <main className="flex-1 p-8 bg-gray-50">
+        <Outlet />
+      </main>
     </div>
   );
 };
