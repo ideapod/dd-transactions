@@ -7,7 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 // import { schema } from './schema.js'
 // import { getSchemaFromMongo } from './dochelper.js'
 const helloWorldID = '6632d8b205d0dc086767d37b';
-const serverURL = "http://52.62.121.255:8080"
+const serverURL = import.meta.env.VITE_SERVER_URL || "http://localhost:5050"
 
 const defaultSchema = {
     fields: [{

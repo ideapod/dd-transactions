@@ -1,0 +1,43 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./dump:/dump:ro
+      - ./mongo/restore.sh:/docker-entrypoint-initdb.d/restore.sh:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build: ./mern/server
+    ports:
+      - "5050:5050"
+    environment:
+      MONGO_URI: mongodb://mongo:27017/employees
+      PORT: 5050
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./mern/server:/app
+      - /app/node_modules
+
+  client:
+    build: ./mern/client
+    ports:
+      - "8081:8081"
+    environment:
+      VITE_SERVER_URL: http://localhost:5050
+    depends_on:
+      - server
+    volumes:
+      - ./mern/client:/app
+      - /app/node_modules
+
+volumes:
+  mongo_data:

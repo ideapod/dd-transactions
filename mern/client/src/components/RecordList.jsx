@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-const serverURL = "http://52.62.121.255:8080"
+const serverURL = import.meta.env.VITE_SERVER_URL || "http://localhost:5050"
 
 const Record = (props) => (
   <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">

@@ -1,18 +1,8 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
 
-// const uri = process.env.ATLAS_URI || "";
-const uri = process.env.DOCDB_URI || "";
+const uri = process.env.MONGO_URI || "";
 console.log("About to connect with: " && uri);
-/* 
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-*/
-const client = new MongoClient(uri, {
-  tlsCAFile: `global-bundle.pem`
-});
+const client = new MongoClient(uri);
 
 try {
   // Connect the client to the server

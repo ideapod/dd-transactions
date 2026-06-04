@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import JSONInput from 'react-json-editor-ajrm'
-import locale from 'react-json-editor-ajrm/locale/en';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
     
-const serverURL = "http://52.62.121.255:8080"
+const serverURL = import.meta.env.VITE_SERVER_URL || "http://localhost:5050"
 
 export default function TxnDefForm() {
   const [form, setForm] = useState({
@@ -70,9 +70,6 @@ export default function TxnDefForm() {
   async function onSubmit(e) {
     e.preventDefault();
     const txndef = { ...form };
-    console.log ('form fields are: ' + JSON.stringify(form));
-    if (!txndef.schema) txndef.schema = form.schema_editor.state()['jsObject'];
-    
     console.log('schema on submit is: ' + JSON.stringify(txndef.schema));
     try {
       let response;
@@ -117,47 +114,32 @@ export default function TxnDefForm() {
         onSubmit={onSubmit}
         className="border rounded-lg overflow-hidden p-4"
       >
-        <div className="grid grid-cols-1 gap-x-8 gap-y-10 border-b border-slate-900/10 pb-12 md:grid-cols-2">
-          <div>
-            <h2 className="text-base font-semibold leading-7 text-slate-900">
-              Transaction Info
-            </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Update the schema so you can change the data collected
-            </p>
-          </div>
-
-          <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 ">
-            <div className="sm:col-span-4">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium leading-6 text-slate-900"
-              >
+        <div className="flex flex-col gap-y-6 border-b border-slate-900/10 pb-12">
+          <div className="flex gap-x-6">
+            <div className="flex-1">
+              <label htmlFor="name" className="block text-sm font-medium leading-6 text-slate-900">
                 Name
               </label>
               <div className="mt-2">
-                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 max-w-md">
                   <input
                     type="text"
                     name="name"
                     id="name"
                     className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-slate-900 placeholder:text-slate-400 focus:ring-0 sm:text-sm sm:leading-6"
-                    placeholder="First Last"
+                    placeholder="Form name"
                     value={form.name}
                     onChange={(e) => updateForm({ name: e.target.value })}
                   />
                 </div>
               </div>
             </div>
-            <div className="sm:col-span-4">
-              <label
-                htmlFor="position"
-                className="block text-sm font-medium leading-6 text-slate-900"
-              >
+            <div className="flex-1">
+              <label htmlFor="version" className="block text-sm font-medium leading-6 text-slate-900">
                 Version
               </label>
               <div className="mt-2">
-                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 max-w-md">
                   <input
                     type="text"
                     name="version"
@@ -170,28 +152,20 @@ export default function TxnDefForm() {
                 </div>
               </div>
             </div>
-            <div>
-              <label
-                htmlFor="schema"
-                className="block text-sm font-medium leading-6 text-slate-900"
-              >
-                Schema
-              </label>
- 
-              <div className="mt-2">
-                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                  <JSONInput 
-                      id          = 'schema_editor'
-                      // placeholder = { (form.schema.length > 0)?JSON.parse(form.schema): undefined }
-                      placeholder = { form.schema ? form.schema : undefined }
-                      // colors      = { darktheme }
-                      locale      = { locale }
-                      height      = '550px'
-                      onKeyPressUpdate = { true }
-                      onChange={(data) => updateFormSchema({ schema: data.jsObject })}
-                  />
-                </div>
-              </div>
+          </div>
+          <div>
+            <label htmlFor="schema" className="block text-sm font-medium leading-6 text-slate-900">
+              Schema
+            </label>
+            <div className="mt-2">
+              <CodeMirror
+                value={form.schema ? JSON.stringify(form.schema, null, 2) : ''}
+                height="550px"
+                extensions={[json()]}
+                onChange={(val) => {
+                  try { updateFormSchema({ schema: JSON.parse(val) }); } catch {}
+                }}
+              />
             </div>
           </div>
         </div>
