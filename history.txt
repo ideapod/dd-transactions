@@ -1,0 +1,160 @@
+1  echo -e "[mongodb-org-4.0] \nname=MongoDB Repository\nbaseurl=https://repo.mongodb.org/yum/amazon/2013.03/mongodb-org/4.0/x86_64/\ngpgcheck=1 \nenabled=1 \ngpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc" | sudo tee /etc/yum.repos.d/mongodb-org-4.0.repo
+    2  ec2-user:~/environment $ echo -e "[mongodb-org-4.0] \nname=MongoDB Repository\nbaseurl=https://repo.mongodb.org/yum/amazon/2013.03/mongodb-org/4.0/x86_64/\ngpgcheck=1 \nenabled=1 \ngpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc" | sudo tee /etc/yum.repos.d/mongodb-org-4.0.repo
+    3  [mongodb-org-4.0] 
+    4  name=MongoDB Repository
+    5  baseurl=https://repo.mongodb.org/yum/amazon/2013.03/mongodb-org/4.0/x86_64/
+    6  gpgcheck=1 
+    7  enabled=1 
+    8  gpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc
+    9  ec2-user:~/environment $ ls  /etc/yum.repos.d/mongodb-org-4.0.repo
+   10  ls /etc/yum.repos.d/mongodb-org-4.0.repo 
+   11  cat /etc/yum.repos.d/mongodb-org-4.0.repo 
+   12  sudo /etc/yum.repos.d/mongodb-org-4.0.repo
+   13  sudo vi /etc/yum.repos.d/mongodb-org-4.0.repo
+   14  sudo yum install -y mongodb-org-shell
+   15  sudo vi /etc/yum.repos.d/mongodb-org-6.0.repo
+   16  sudo yum install mongodb-org-database mongodb-org-database-tools-extra
+   17  sudo vi /etc/yum.repos.d/mongodb-org-6.0.repo
+   18  ls -l $_
+   19  ls -l /etc/yum.repos.d/mongodb-org-4.0.repo 
+   20  sudo yum install mongodb-org-database mongodb-org-database-tools-extra
+   21  sudo vi /etc/yum.repos.d/mongodb-org-6.0.repo
+   22  sudo yum install mongodb-org-database mongodb-org-database-tools-extra
+   23  sudo yum install mongodb-org-database mongodb-org-shell
+   24  wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+   25  mongo --ssl --host docdb-2024-04-19-03-46-08.cluster-ccl2iahkdrzh.ap-southeast-2.docdb.amazonaws.com:27017 --sslCAFile global-bundle.pem --username svmjdsmith 
+   26  sudo yum install mongodb-org-shell
+   27  wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+   28  sudo vi /etc/yum.repos.d/mongodb-org-6.0.repo
+   29  wget -qO- https://www.mongodb.org/static/pgp/server-7.0.asc | sudo tee /etc/apt/trusted.gpg.d/server-7.0.asc
+   30  wget -qO- https://www.mongodb.org/static/pgp/server-7.0.asc
+   31  wget -qO- https://www.mongodb.org/static/pgp/server-7.0.asc > server-7.0.asc
+   32  sudo vi /etc/yum.repos.d/mongodb-*
+   33  ls /etc/yum.repos.d/mongodb-*
+   34  sudo yum install mongodb-org-shell-4.0
+   35  sudo yum install mongodb-org-shell
+   36  sudo vi /etc/yum.repos.d/mongodb-*
+   37  ls /etc/yum.repos.d/mongodb-
+   38  ls /etc/yum.repos.d/mongodb-*
+   39  sudo vi /etc/yum.repos.d/mongodb-org-5.0.repo
+   40  sudo yum install mongodb-org-shell
+   41  sudo vi /etc/yum.repos.d/mongodb-org-5.0.repo
+   42  ls /etc/yum.repos.d/mongodb-
+   43  ls /etc/yum.repos.d/mongodb-*
+   44  sudo vi /etc/yum.repos.d/mongodb-org-6.0.repo 
+   45  sudo yum install mongodb-org-shell
+   46  mongo --ssl --host docdb-2024-04-19-03-46-08.cluster-ccl2iahkdrzh.ap-southeast-2.docdb.amazonaws.com:27017 --sslCAFile global-bundle.pem --username svmjdsmith
+   47  node -v
+   48  npm -v
+   49  mkdir mern && cd mern
+   50  mkdir server && cd server
+   51  npm init -y
+   52  npm install mongodb express cors
+   53  cd ..
+   54  cd server
+   55  mkdir routes
+   56  touch routes/record.js
+   57  node --env-file=config.env server
+   58  wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+   59  node --env-file=config.env server
+   60  cd ..
+   61  npm create vite@latest client - -template react
+   62  cd client
+   63  npm install
+   64  npm install install -D tailwindcss postcss autoprefixer
+   65  npx tailwindcss init -p
+   66  npm install react-router-dom
+   67  mkdir src/components && cd src/components
+   68  touch Navbar.jsx RecordList.js ModifyRecord.jsx
+   69  touch Record.jsx
+   70  cd ../../..
+   71  cd server
+   72  cd mern/
+   73  ls
+   74  cd client
+   75  npm run dev
+   76  npm run dev --host
+   77  ipconfig
+   78  ifconfig
+   79  cd client
+   80  cd mern
+   81  cd client
+   82  ls
+   83  npm run dev --host 0.0.0.0
+   84  npm run dev
+   85  node --env-file=config.env server
+   86  cd mern/server
+   87  cd mern/client
+   88  curl 0.0.0.0/8080
+   89  curl curl 172.31.13.66:8081
+   90  curl 172.31.13.66:8081
+   91  curl http://169.254.169.254/latest/meta-data/instance-id
+   92  curl http://172.31.13.66/latest/meta-data/instance-id
+   93  node --env-file=config.env server
+   94  npm run dev
+   95  cd server
+   96  cd mern/server
+   97  cd client
+   98  cd mern/client
+   99  curl 0.0.0.0:8081
+  100  curl 0.0.0.0:8080
+  101  curl 0.0.0.0:8080/records
+  102  node --env-file=config.env server
+  103  npm run dev
+  104  cd server
+  105  cd mern/server
+  106  ls
+  107  cd client
+  108  cd mern/client
+  109  npm install @mui/material @emotion/react @emotion/styled
+  110  npm install --save @data-driven-forms/react-form-renderer
+  111  npm install @data-driven-forms/mui-component-mapper -S
+  112  npm run dev
+  113  cd mern/server
+  114  node --env-file=config.env server
+  115  cd mern/server
+  116  cd mern/client
+  117  node --env-file=config.env server
+  118  history | grep mongo
+  119  npm run dev
+  120  cd mern/client
+  121  cd mern/server
+  122  node --env-file=config.env server
+  123  npm run dev
+  124  cd mern/server
+  125  cd mern/client
+  126  npm run dev
+  127  node --env-file=config.env server
+  128  npm install --save jsoneditor jsoneditor-react
+  129  npm i --save react-json-editor-ajrm
+  130  npm run dev
+  131  cd mern/server
+  132  npm i --save react-json-editor-ajrm
+  133  cd mern/client
+  134  node --env-file=config.env server
+  135  npm run dev
+  136  cd mern/server/
+  137  cd mern/client
+  138  node --env-file=config.env server
+  139  npm run dev
+  140  uname -a
+  141  lsb_release
+  142  ls /etc/*-release
+  143  cat /etc/amazon-linux-release
+  144  cd mern/server
+  145  cd mern/client
+  146  history | tail -20
+  147  node dev
+  148  ls
+  149  node
+  150  history | grep mongo
+  151  mongo --ssl --host docdb-2024-04-19-03-46-08.cluster-ccl2iahkdrzh.ap-southeast-2.docdb.amazonaws.com:27017 --sslCAFile global-bundle.pem --username svmjdsmith
+  152  node --env-file=config.env server
+  153  npm run dev
+  154  mongoshell
+  155  mongo
+  156  mongodump
+  157  sudo apt-get install mongodump
+  158  yum install mongodump
+  159  sudo yum install mongodump
+  160  history > history.txt
