@@ -1,7 +1,13 @@
 import React from 'react';
 import { useState, useEffect } from "react";
 import FormRenderer from '@data-driven-forms/react-form-renderer/form-renderer';
-import { componentMapper, FormTemplate } from '@data-driven-forms/mui-component-mapper';
+import { componentMapper as baseComponentMapper, FormTemplate } from '@data-driven-forms/mui-component-mapper';
+import PaymentSummary from './PaymentSummary';
+
+const componentMapper = {
+  ...baseComponentMapper,
+  'payment-summary': PaymentSummary,
+};
 import { useParams, useNavigate } from "react-router-dom";
 // import { schema } from './schema.js'
 // import { getSchemaFromMongo } from './dochelper.js'
@@ -179,13 +185,34 @@ function TransactionForm() {
     return;
   }, [params.txndefid, params.txnid, navigate]);
   
-  const schema = txndef.schema || defaultSchema;
   formName = txndef.name || 'Get started form 2';
   
   // Returns the payment step from the schema if one exists, otherwise null.
   function getPaymentStep() {
     const wizardField = txndef.schema?.fields?.find((f) => f.component === "wizard");
     return wizardField?.fields?.find((s) => s.type === "payment") || null;
+  }
+
+  // Returns the schema with payment steps patched to have an empty fields array
+  // so the wizard renderer doesn't crash before we intercept the step.
+  function getPatchedSchema() {
+    if (!txndef.schema) return defaultSchema;
+    const patched = JSON.parse(JSON.stringify(txndef.schema));
+    const wizardField = patched.fields?.find((f) => f.component === "wizard");
+    if (wizardField?.fields) {
+      wizardField.fields = wizardField.fields.map((step) =>
+        step.type === "payment"
+          ? { ...step, fields: [{
+              component: 'payment-summary',
+              name: 'payment_summary',
+              amountCents: step.amount_cents,
+              currency: step.currency,
+              description: step.description,
+            }]}
+          : step
+      );
+    }
+    return patched;
   }
 
   async function onSubmit(values) {
@@ -249,7 +276,7 @@ function TransactionForm() {
       <FormRenderer
         componentMapper={componentMapper}
         FormTemplate={FormTemplateCanReset}
-        schema={schema}
+        schema={getPatchedSchema()}
         onSubmit={onSubmit}
         onCancel={() => navigate("/transactions")}
         initialValues={txndata.data}

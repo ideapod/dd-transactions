@@ -1,0 +1,11 @@
+meta {
+  name: Get Session Status
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/payment/session-status?session_id=PASTE_SESSION_ID_HERE
+  body: none
+  auth: none
+}

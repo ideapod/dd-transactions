@@ -1,0 +1,18 @@
+meta {
+  name: Get completed transactions for a TxnDef
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/transactions/{{txnDefId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Returns all complete and free transactions for the given TxnDef ID.
+  This is the endpoint for 3rd party integrations.
+
+  Set txnDefId in the environment to the ID from the TxnDef edit page URL.
+}

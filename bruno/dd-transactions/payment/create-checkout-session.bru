@@ -1,0 +1,21 @@
+meta {
+  name: Create Checkout Session
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/payment/create-checkout-session
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "txnDefId": "{{txnDefId}}",
+    "formData": {
+      "first_name": "Test",
+      "last_name": "User"
+    }
+  }
+}

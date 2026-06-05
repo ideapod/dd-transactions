@@ -11,11 +11,12 @@ const app = express();
 
 app.use(cors());
 
-// Note: /payment/webhook needs raw body for Stripe signature verification,
-// so it is mounted before express.json() and handles its own body parsing.
-app.use("/payment", payment);
+// Stripe webhook needs raw body for signature verification — mount before express.json()
+app.use("/payment/webhook", express.raw({ type: "application/json" }));
 
+// All other routes get JSON body parsing
 app.use(express.json());
+app.use("/payment", payment);
 app.use("/txndef", txndefs);
 app.use("/transaction", transactions);
 

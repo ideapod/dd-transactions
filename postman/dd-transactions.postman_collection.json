@@ -1,0 +1,138 @@
+{
+  "info": {
+    "name": "Dynamic Transaction Builder",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5050"
+    },
+    {
+      "key": "txnDefId",
+      "value": "PASTE_TXNDEF_ID_HERE"
+    },
+    {
+      "key": "transactionId",
+      "value": "PASTE_TRANSACTION_ID_HERE"
+    }
+  ],
+  "item": [
+    {
+      "name": "TxnDefs",
+      "item": [
+        {
+          "name": "List all TxnDefs",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/txndef"
+          }
+        },
+        {
+          "name": "Get TxnDef by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/txndef/{{txnDefId}}"
+          }
+        },
+        {
+          "name": "Create TxnDef",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/txndef",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Form\",\n  \"version\": \"1.0\",\n  \"schema\": {\n    \"fields\": [\n      { \"component\": \"text-field\", \"name\": \"first_name\", \"label\": \"First name\" }\n    ]\n  },\n  \"webhook_url\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update TxnDef",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/txndef/{{txnDefId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Form\",\n  \"version\": \"1.1\",\n  \"schema\": {},\n  \"webhook_url\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete TxnDef",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/txndef/{{txnDefId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List all Transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transaction"
+          }
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transaction/{{transactionId}}"
+          }
+        },
+        {
+          "name": "Delete Transaction",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/transaction/{{transactionId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "API (3rd party)",
+      "item": [
+        {
+          "name": "Get completed transactions for a TxnDef",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/transactions/{{txnDefId}}",
+            "description": "Returns all complete and free transactions for the given TxnDef ID. This is the endpoint for 3rd party integrations."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/payment/create-checkout-session",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txnDefId\": \"{{txnDefId}}\",\n  \"formData\": {\n    \"first_name\": \"Test\",\n    \"last_name\": \"User\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Session Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/payment/session-status?session_id=PASTE_SESSION_ID_HERE",
+              "query": [{ "key": "session_id", "value": "PASTE_SESSION_ID_HERE" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -95,7 +95,7 @@ router.get("/session-status", async (req, res) => {
  * Stripe calls this when a checkout session completes.
  * Requires the raw request body — see server.js for the raw body parser.
  */
-router.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+router.post("/webhook", async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
 
