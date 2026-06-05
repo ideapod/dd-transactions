@@ -1,7 +1,6 @@
 import express from "express";
-
-// This will help us connect to the database
 import db from "../db/connection.js";
+import { fireWebhook } from "../lib/webhook.js";
 
 // This help convert the id from string to ObjectId for the _id.
 import { ObjectId } from "mongodb";
@@ -39,10 +38,20 @@ router.post("/", async (req, res) => {
       created: req.body.created,
       modified: req.body.modified,
       data: req.body.data,
+      status: req.body.status || "free",
+      stripe_session_id: req.body.stripe_session_id || null,
+      payment_amount: req.body.payment_amount || null,
     };
-    console.log ('posting new transaction' + newDocument.name);
+    console.log('posting new transaction' + newDocument.name);
     let collection = await db.collection("transactions");
     let result = await collection.insertOne(newDocument);
+
+    // fire webhook for free transactions (paid ones are fired from payment route)
+    if (newDocument.status === "free") {
+      const txndef = await db.collection("txndefs").findOne({ _id: new ObjectId(newDocument.schema_id) });
+      await fireWebhook(txndef, { ...newDocument, _id: result.insertedId });
+    }
+
     res.send(result).status(204);
   } catch (err) {
     console.error(err);
@@ -63,6 +72,9 @@ router.patch("/:id", async (req, res) => {
         created: req.body.created,
         modified: req.body.modified,
         data: req.body.data,
+        status: req.body.status || "free",
+        stripe_session_id: req.body.stripe_session_id || null,
+        payment_amount: req.body.payment_amount || null,
       },
     };
     console.log('updating transaction: ' + req.body.name + ': ' + JSON.stringify(req.body.data));

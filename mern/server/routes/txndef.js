@@ -37,6 +37,7 @@ router.post("/", async (req, res) => {
       name: req.body.name,
       version: req.body.version,
       schema: req.body.schema,
+      webhook_url: req.body.webhook_url || null,
     };
     console.log ('posting new transaction definition' + newDocument.name);
     let collection = await db.collection("txndefs");
@@ -57,6 +58,7 @@ router.patch("/:id", async (req, res) => {
         name: req.body.name,
         version: req.body.version,
         schema: req.body.schema,
+        webhook_url: req.body.webhook_url || null,
       },
     };
 

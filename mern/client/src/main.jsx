@@ -8,6 +8,7 @@ import {
 import App from "./App";
 import TransactionList from "./components/TransactionList";
 import TransactionForm from "./components/TransactionForm";
+import PaymentComplete from "./components/PaymentComplete";
 import TxnDefList from "./components/TxnDefList";
 import TxnDefForm from "./components/TxnDefForm";
 
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: "/transactions/create/:txndefid",
         element: <TransactionForm />,
+      },
+      {
+        path: "/transactions/complete",
+        element: <PaymentComplete />,
       },
     ],
   },

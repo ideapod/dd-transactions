@@ -182,55 +182,65 @@ function TransactionForm() {
   const schema = txndef.schema || defaultSchema;
   formName = txndef.name || 'Get started form 2';
   
-  // for saving the data - declare an async function like useeffect above that will write using API. 
-  // This function will handle the submission.
-  // onSubmit={(values, formApi) => console.log(values)}
-  async function onSubmit(values,formApi) {
+  // Returns the payment step from the schema if one exists, otherwise null.
+  function getPaymentStep() {
+    const wizardField = txndef.schema?.fields?.find((f) => f.component === "wizard");
+    return wizardField?.fields?.find((s) => s.type === "payment") || null;
+  }
+
+  async function onSubmit(values) {
+    const paymentStep = getPaymentStep();
+
+    // --- paid submission: redirect to Stripe Checkout ---
+    if (isNew && paymentStep) {
+      try {
+        const response = await fetch(`${serverURL}/payment/create-checkout-session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ txnDefId, formData: values }),
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const { url } = await response.json();
+        window.location.href = url;
+      } catch (error) {
+        console.error("Error creating checkout session:", error);
+      }
+      return;
+    }
+
+    // --- free or edit submission: save directly ---
     const txn = {
       schema_id: txnDefId,
       name: txndef.name,
-      created: "",
+      created: Date.now(),
       modified: Date.now(),
       data: values,
+      status: "free",
     };
-    
+
     try {
       let response;
       if (isNew) {
-        // if we are adding a new record we will POST to /record.
         console.log("Posting new transaction: " + txn.name);
-        txn.created = Date.now();
         response = await fetch(`${serverURL}/transaction`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(txn),
         });
       } else {
-        // if we are updating a record we will PATCH to /record/:id.
-        console.log("updating transaction: " + txn.name + " id:" + params.id );
+        console.log("Updating transaction: " + txn.name + " id:" + params.id);
         response = await fetch(`${serverURL}/transaction/${params.id}`, {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(txn),
         });
       }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      console.log('saved transaction');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     } catch (error) {
-      console.error('A problem occurred with your fetch operation: ', error);
+      console.error("A problem occurred with your fetch operation:", error);
     } finally {
-      console.log('navigating to transactions');
-      navigate("/transactions");  
+      navigate("/transactions");
     }
-    console.log('exiting onsubmit');
   }
   
   

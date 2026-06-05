@@ -20,6 +20,9 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017/employees
       PORT: 5050
+      CLIENT_URL: http://localhost:8081
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
     depends_on:
       mongo:
         condition: service_healthy

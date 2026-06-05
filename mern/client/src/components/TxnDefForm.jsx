@@ -10,6 +10,7 @@ export default function TxnDefForm() {
     name: "",
     version: "",
     schema: "",
+    webhook_url: "",
   });
   const [isNew, setIsNew] = useState(true);
   const params = useParams();
@@ -150,6 +151,24 @@ export default function TxnDefForm() {
                     onChange={(e) => updateForm({ version: e.target.value })}
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="webhook_url" className="block text-sm font-medium leading-6 text-slate-900">
+              Webhook URL <span className="text-slate-400 font-normal">(optional — receives POST on transaction complete)</span>
+            </label>
+            <div className="mt-2">
+              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-slate-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 max-w-xl">
+                <input
+                  type="url"
+                  name="webhook_url"
+                  id="webhook_url"
+                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-slate-900 placeholder:text-slate-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  placeholder="https://example.com/webhook"
+                  value={form.webhook_url || ""}
+                  onChange={(e) => updateForm({ webhook_url: e.target.value })}
+                />
               </div>
             </div>
           </div>
