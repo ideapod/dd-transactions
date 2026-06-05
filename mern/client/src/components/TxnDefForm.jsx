@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
+import SchemaEditor from './schema-editor/SchemaEditor';
     
 const serverURL = import.meta.env.VITE_SERVER_URL || "http://localhost:5050"
 
@@ -173,19 +172,13 @@ export default function TxnDefForm() {
             </div>
           </div>
           <div>
-            <label htmlFor="schema" className="block text-sm font-medium leading-6 text-slate-900">
+            <label className="block text-sm font-medium leading-6 text-slate-900 mb-2">
               Schema
             </label>
-            <div className="mt-2">
-              <CodeMirror
-                value={form.schema ? JSON.stringify(form.schema, null, 2) : ''}
-                height="550px"
-                extensions={[json()]}
-                onChange={(val) => {
-                  try { updateFormSchema({ schema: JSON.parse(val) }); } catch {}
-                }}
-              />
-            </div>
+            <SchemaEditor
+              schema={form.schema}
+              onChange={(schema) => updateFormSchema({ schema })}
+            />
           </div>
         </div>
         <input
