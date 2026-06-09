@@ -145,17 +145,77 @@ Free forms (no payment step) save directly with `status: "free"`.
 
 `TxnDefForm` uses `@uiw/react-codemirror` with `@codemirror/lang-json`. Schema stored as JS object; serialised with `JSON.stringify` in, parsed with `JSON.parse` out (errors silently swallowed while mid-edit).
 
-### MUI Theme
+### MUI Theme & Visual Style
 
-A custom MUI theme is defined in `mern/client/src/theme.js` and applied via `ThemeProvider` in `main.jsx`. It styles all `@data-driven-forms/mui-component-mapper` form fields automatically. Design tokens are sourced from the VIC government design system (`service.vic.gov.au`):
+The app is styled to match the **Service Victoria** design system. The MUI theme is defined in `mern/client/src/theme.js` and applied via `ThemeProvider` in `main.jsx`. Global CSS overrides live in `mern/client/src/index.css`.
+
+#### Design tokens
 
 | Token | Value |
 |---|---|
 | Primary (orange) | `#e3710a` |
 | Primary hover | `#9d5b00` |
 | Body text | `#3c4a60` |
+| Page background | `#f4f4f4` |
 | Font | Verdana, Helvetica, sans-serif |
 | Border radius | 2px |
+
+#### Typography scale
+
+| Variant | Size | Use |
+|---|---|---|
+| `h1` | 1.75rem | Page-level schema titles (e.g. form name in card) |
+| `h2` | 1.5rem | Section headings |
+| `h3` | 1.3rem | Sub-section headings |
+| `h4` | 1.1rem | Field group headings |
+| `h5` | 1.0rem | Minor headings |
+| `body1` | 0.875rem | Standard body text |
+| Tab labels | 0.95rem | Set in `MuiTab` theme override |
+| Banner title | 1.6rem | Orange hero banner in `TransactionForm` |
+
+#### Transaction form layout
+
+`TransactionForm` renders a **Service Victoria–style page**:
+- Full-width **orange hero banner** at the top with the form name
+- White **card** (`Paper`) centred on a grey (`#f4f4f4`) background
+- Single row of wizard nav buttons only (outer submit/cancel suppressed for wizard forms via `showFormControls={!isWizard}`)
+
+#### Tab styling
+
+`@data-driven-forms` renders its `tabs` component inside a `MuiAppBar` (`<header>`). The theme overrides `MuiAppBar` (white background, no shadow) and `MuiTabs`/`MuiTab` to produce SV-style tabs:
+- Full-width tabs (`variant: 'fullWidth'`)
+- Orange 4px indicator bar at the **top** of the active tab
+- Vertical dividers between tabs
+- Active tab: orange text; inactive: dark grey
+
+#### Custom components in `componentMapper`
+
+Beyond the standard `@data-driven-forms` MUI components, `TransactionForm` registers:
+
+| Component name | File | Purpose |
+|---|---|---|
+| `payment-summary` | `PaymentSummary.jsx` | Read-only payment amount display on the payment wizard step |
+| `bullet-list` | inline in `TransactionForm.jsx` | Renders a `<ul>` bullet list from an `items` array |
+
+**`bullet-list` schema usage:**
+```json
+{
+  "component": "bullet-list",
+  "name": "my-list",
+  "items": [
+    "First item",
+    "Second item",
+    "Third item"
+  ]
+}
+```
+
+#### CSS overrides (`index.css`)
+
+Two global rules patch `@data-driven-forms` layout quirks:
+
+1. **`FormFieldGrid-grid`** — forces all field wrappers to full row width (prevents unintended side-by-side layouts).
+2. **Bare typography in `MuiGrid-container`** — `h1`–`h6`, `p`, `ul`, `body1` elements that `@data-driven-forms` drops directly into flex grid containers (without a grid-item wrapper) are forced to `flex-basis: 100%` so they stack vertically instead of flowing inline.
 
 To adjust the form appearance, edit `theme.js` — changes cascade to all MUI components including form fields, buttons, and labels.
 

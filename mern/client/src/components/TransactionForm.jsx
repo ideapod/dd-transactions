@@ -3,10 +3,22 @@ import { useState, useEffect } from "react";
 import FormRenderer from '@data-driven-forms/react-form-renderer/form-renderer';
 import { componentMapper as baseComponentMapper, FormTemplate } from '@data-driven-forms/mui-component-mapper';
 import PaymentSummary from './PaymentSummary';
+import { Box, Paper, Typography } from '@mui/material';
+
+const BulletList = ({ items = [], label }) => (
+  <Box component="ul" sx={{ pl: 3, mt: 0.5, mb: 1, listStyleType: 'disc', listStylePosition: 'outside' }}>
+    {(items.length ? items : [label]).filter(Boolean).map((item, i) => (
+      <Typography key={i} component="li" variant="body1" sx={{ mb: 0.5, display: 'list-item' }}>
+        {item}
+      </Typography>
+    ))}
+  </Box>
+);
 
 const componentMapper = {
   ...baseComponentMapper,
   'payment-summary': PaymentSummary,
+  'bullet-list': BulletList,
 };
 import { useParams, useNavigate } from "react-router-dom";
 // import { schema } from './schema.js'
@@ -56,7 +68,10 @@ const defaultSchema = {
       }]
   };
 
-const FormTemplateCanReset = (props) => <FormTemplate {...props} canReset />;
+const FormTemplateCanReset = (props) => {
+  const isWizard = props.schema?.fields?.some((f) => f.component === 'wizard');
+  return <FormTemplate {...props} canReset showFormControls={!isWizard} />;
+};
 var formName = 'Get Started Form';
 const validatorMapper = {
   'same-email': () => (
@@ -272,17 +287,27 @@ function TransactionForm() {
   
   
   return (
-    <div style={{ maxWidth: 640, padding: '24px 0' }}>
-      <FormRenderer
-        componentMapper={componentMapper}
-        FormTemplate={FormTemplateCanReset}
-        schema={getPatchedSchema()}
-        onSubmit={onSubmit}
-        onCancel={() => navigate("/transactions")}
-        initialValues={txndata.data}
-        validatorMapper={validatorMapper}
-      />
-    </div>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f4f4f4', mx: -8, mt: -8, px: { xs: 2, sm: 6 }, pt: 6, pb: 10 }}>
+      {/* Orange header banner */}
+      <Box sx={{ bgcolor: '#e3710a', mx: { xs: -2, sm: -6 }, mt: -4, mb: 5, px: { xs: 2, sm: 6 }, py: 3 }}>
+        <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: '1.6rem', lineHeight: 1.2 }}>
+          {txndef.name || 'Form'}
+        </Typography>
+      </Box>
+
+      {/* White card */}
+      <Paper elevation={0} sx={{ maxWidth: 680, mx: 'auto', p: { xs: 3, sm: 5 }, border: '1px solid #e5e7eb' }}>
+        <FormRenderer
+          componentMapper={componentMapper}
+          FormTemplate={FormTemplateCanReset}
+          schema={getPatchedSchema()}
+          onSubmit={onSubmit}
+          onCancel={() => navigate("/transactions")}
+          initialValues={txndata.data}
+          validatorMapper={validatorMapper}
+        />
+      </Paper>
+    </Box>
   )
 }
   

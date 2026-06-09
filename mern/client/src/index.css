@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Force all @data-driven-forms field grid items to full width */
+.FormFieldGrid-grid {
+  flex-basis: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Plain typography elements dropped directly into MUI Grid containers
+   (no MuiGrid-item wrapper) must stack vertically, not flow as flex row items */
+.MuiGrid-container > h1,
+.MuiGrid-container > h2,
+.MuiGrid-container > h3,
+.MuiGrid-container > h4,
+.MuiGrid-container > h5,
+.MuiGrid-container > h6,
+.MuiGrid-container > p,
+.MuiGrid-container > ul,
+.MuiGrid-container > body1 {
+  flex-basis: 100%;
+  max-width: 100%;
+  width: 100%;
+}

@@ -19,14 +19,17 @@ export default function SchemaEditor({ schema, onChange }) {
       )}
 
       {tab === 1 && (
-        <CodeMirror
-          value={schema ? JSON.stringify(schema, null, 2) : ''}
-          height="550px"
-          extensions={[json()]}
-          onChange={(val) => {
-            try { onChange(JSON.parse(val)); } catch {}
-          }}
-        />
+        <Box sx={{ pr: 2, width: '100%', overflow: 'hidden' }}>
+          <CodeMirror
+            style={{ width: '100%' }}
+            value={schema ? JSON.stringify(schema, null, 2) : ''}
+            height="550px"
+            extensions={[json()]}
+            onChange={(val) => {
+              try { onChange(JSON.parse(val)); } catch {}
+            }}
+          />
+        </Box>
       )}
     </Box>
   );

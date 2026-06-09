@@ -114,8 +114,98 @@ To receive a webhook when a transaction completes, set `webhook_url` on the TxnD
 
 A [Bruno](https://www.usebruno.com/) collection is in `bruno/dd-transactions/`. Open it in Bruno, select the **local** environment, and set `txnDefId` to the ID from the TxnDef edit page URL.
 
+## Custom schema components
+
+Beyond the standard `@data-driven-forms` MUI components, the following are registered in `TransactionForm.jsx`:
+
+### `bullet-list`
+
+Renders a proper `<ul>` bullet list. Use this instead of multiple `plain-text` fields for list content.
+
+```json
+{
+  "component": "bullet-list",
+  "name": "requirements",
+  "items": [
+    "Prove your identity",
+    "Agree to a national police check if required",
+    "Provide relevant documents"
+  ]
+}
+```
+
+### `payment-summary`
+
+Injected automatically by `TransactionForm` into payment wizard steps — do not use directly in schemas.
+
+### Tabs inside a step
+
+The standard `tabs` component renders SV-style tabbed panels within a wizard step:
+
+```json
+{
+  "component": "tabs",
+  "name": "info-tabs",
+  "fields": [
+    {
+      "name": "tab-before", "title": "Before you start",
+      "fields": [
+        { "component": "plain-text", "name": "intro", "label": "How to register", "variant": "h4" },
+        { "component": "bullet-list", "name": "steps", "items": ["Step one", "Step two"] }
+      ]
+    },
+    { "name": "tab-faq", "title": "FAQ", "fields": [] }
+  ]
+}
+```
+
 ## Styling
 
-Form fields are styled via a custom MUI theme (`mern/client/src/theme.js`) based on the [VIC government design system](https://service.vic.gov.au). To adjust the appearance, edit `theme.js`.
+The app is styled to match [service.vic.gov.au](https://www.service.vic.gov.au). The MUI theme is in `mern/client/src/theme.js`; global layout fixes are in `mern/client/src/index.css`.
+
+### Design tokens
+
+| Token | Value |
+|---|---|
+| Primary orange | `#e3710a` |
+| Primary hover | `#9d5b00` |
+| Body text | `#3c4a60` |
+| Page background | `#f4f4f4` |
+| Font | Verdana, Helvetica, sans-serif |
+| Border radius | 2px |
+
+### Typography scale
+
+| Variant | Size | Use |
+|---|---|---|
+| Banner title | 1.6rem bold | Orange hero header |
+| `h1` | 1.75rem | Schema page/form title |
+| `h2` | 1.5rem | Section headings |
+| `h3` | 1.3rem | Sub-section headings |
+| `h4` | 1.1rem | Field group / tab panel headings |
+| `h5` | 1.0rem | Minor headings |
+| Tab labels | 0.95rem | Above body, below headings |
+| `body1` | 0.875rem | Standard body text |
+
+### Transaction form page layout
+
+Each transaction renders as a Service Victoria–style page:
+- Full-width **orange hero banner** with the form name
+- White **card** (`Paper`) centred on a grey (`#f4f4f4`) background
+- Wizard navigation only (Continue / Back / Cancel) — outer submit/cancel row is suppressed for wizard forms
+
+### Tab styling
+
+`@data-driven-forms` wraps `tabs` in a `MuiAppBar`. The theme overrides this to produce SV-style tabs:
+- Full-width equal tabs (`variant: 'fullWidth'`)
+- **4px orange bar at the top** of the active tab
+- Vertical dividers between tabs, orange text on active tab
+
+### Known layout quirks & fixes (`index.css`)
+
+`@data-driven-forms` has two layout quirks that are patched globally:
+
+1. **`FormFieldGrid-grid`** — field wrappers don't always take full row width; forced to `flex-basis: 100%`.
+2. **Bare typography in flex containers** — `plain-text` and custom components render `h1`–`h6`, `p`, `ul` etc. as direct children of `MuiGrid-container` (a flex container) without grid-item wrappers, causing them to flow side-by-side. Fixed by forcing `flex-basis: 100%` on those elements.
 
 The `@data-driven-forms` schema format is documented at https://data-driven-forms.org/
