@@ -25,6 +25,29 @@ docker compose exec mongo mongorestore --noOptionsRestore --gzip /dump
 
 > If you've previously run `docker compose down -v`, the volume is wiped and you'll need to restore again.
 
+### Backing up and restoring MongoDB
+
+**Backup** — dumps the `employees` database to a timestamped gzip archive in `dump/`:
+
+```bash
+docker compose up -d mongo   # start mongo if not already running
+docker compose exec mongo mongodump --db employees --gzip --archive > dump/backup-$(date +%Y%m%d-%H%M%S).gz
+```
+
+**Restore** — replays a specific backup file (replace the filename as needed):
+
+```bash
+docker compose exec -T mongo mongorestore --db employees --gzip --archive < dump/backup-20260609-202019.gz
+```
+
+Add `--drop` before `--db` to wipe existing collections before restoring (safe point-in-time rollback):
+
+```bash
+docker compose exec -T mongo mongorestore --drop --db employees --gzip --archive < dump/backup-20260609-202019.gz
+```
+
+> Backup files are gitignored by default — store them somewhere safe if you need them long-term.
+
 ### Stripe (for payment forms)
 
 Copy `.env.example` to `.env` and add your Stripe test keys, then in a separate terminal:
