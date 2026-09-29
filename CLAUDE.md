@@ -14,8 +14,10 @@ Originally developed in AWS Cloud9 against Amazon DocumentDB; migrated to self-h
 mern/
   client/   React + Vite frontend (port 8081)
   server/   Express backend (port 5050)
-    routes/ record.js, txndef.js, transaction.js, payment.js
-    lib/    webhook.js helper
+    routes/ record.js, txndef.js, transaction.js, payment.js, apikey.js
+    lib/    apiKeys.js, connections.js, webhook.js, secrets.js, schemaValidator.js
+    mcp/    server.js (MCP server at /mcp), schema-guide.md (served to LLMs)
+    scripts/ create-api-key.js
 mongo/
   restore.sh   Auto-runs mongorestore on first container start
 dump/
@@ -64,6 +66,8 @@ In Docker, env vars are injected via `docker-compose.yml` which reads from `.env
 ```
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...   # printed by `stripe listen`
+SECRETS_KEY=...                   # AES key material for stored webhook secrets/headers (dev fallback + warning if unset)
+WEBHOOK_ALLOW_PRIVATE=false       # true permits webhook URLs on private/loopback IPs (local testing)
 ```
 
 ### Client
@@ -72,7 +76,7 @@ API base URL is set via `VITE_SERVER_URL` (e.g. `http://localhost:5050`). Falls 
 ## Database
 
 MongoDB database: `employees`
-Collections: `txndefs`, `transactions`
+Collections: `txndefs`, `transactions`, `api_keys`, `connections`
 
 The `dump/` directory contains a `mongodump` of the original data. Restore with `--noOptionsRestore --gzip`.
 
@@ -128,10 +132,19 @@ Payment flow: form submit → `POST /payment/create-checkout-session` → Stripe
 
 Free forms (no payment step) save directly with `status: "free"`.
 
-### 3rd-party API
+### 3rd-party API, MCP server and API keys
 
-- `GET /api/transactions/:txndefid` — returns all `complete` and `free` transactions for a TxnDef. Open, no auth.
-- Outbound webhook: if `webhook_url` is set on a TxnDef, the server POSTs transaction data on completion. Implemented in `mern/server/lib/webhook.js`.
+**Auth model:** `/api/*` and `/mcp` require `Authorization: Bearer ddt_...`, checked by `requireApiKey(...scopes)` in `lib/apiKeys.js`. Keys live in `api_keys`, stored as a SHA-256 hash only, with `scopes` and an optional `txndef_ids` restriction (`null` means all). Every TxnDef/transaction lookup made for a key must go through `canAccessTxnDef`. Scopes: `txndefs:read`, `txndefs:write`, `transactions:read`, `connections:manage`. Keys are issued from the `/apikeys` admin page or `scripts/create-api-key.js`.
+
+The admin UI routes (`/txndef`, `/transaction`, `/apikey`, `/payment/*`) are still **unauthenticated**. User login is a planned follow-up.
+
+Other known gaps (see README "Security model summary"): no OAuth for MCP (bearer keys only), no webhook retries or delivery log, no rate limiting, and the SSRF check is open to DNS rebinding. TxnDefs whose `webhook_url` predates signing deliver unsigned until a secret is generated.
+
+When adding an MCP tool: register it inside the right `has(scope)` block in `mcp/server.js`, load TxnDefs through `loadTxnDef` (it enforces the key's TxnDef restriction), throw `ToolError` for errors the model should see, and add it to the README tool table.
+
+- `GET /api/transactions/:txndefid` — `complete` and `free` transactions for a TxnDef. Scope `transactions:read`.
+- `POST /mcp` — MCP server (`mcp/server.js`), Streamable HTTP in stateless mode (new `McpServer` per request). Tools are registered only if the key has the scope they need. `create_txndef`/`update_txndef` run `lib/schemaValidator.js` first. Update `mcp/schema-guide.md` and `COMPONENTS` in the validator whenever custom components change.
+- Outbound webhook: `webhook_url` stays on the TxnDef. Signing secret and custom headers live in the `connections` collection (one doc per TxnDef, AES-GCM encrypted via `lib/secrets.js`) so secrets never appear in TxnDef responses. `lib/webhook.js` signs each delivery (`X-DDT-Signature: t=..,v1=HMAC-SHA256("<t>.<body>")`). `assertPublicUrl` rejects private/loopback/link-local targets when a URL is saved and again at delivery time.
 
 ### Key Design Pattern: `TransactionForm`
 
@@ -228,6 +241,9 @@ To adjust the form appearance, edit `theme.js` — changes cascade to all MUI co
 | `POST /payment/create-checkout-session` | Create Stripe Checkout session, save pending transaction |
 | `POST /payment/webhook` | Stripe webhook — marks transaction complete, fires outbound webhook |
 | `GET /payment/session-status` | Check Stripe session status by session_id |
-| `GET /api/transactions/:txndefid` | 3rd-party pull API |
+| `GET/PUT /txndef/:id/connection`, `POST /txndef/:id/connection/test` | Webhook signing secret, custom headers, test delivery |
+| `GET/POST /apikey`, `DELETE /apikey/:id`, `GET /apikey/scopes` | API key admin (DELETE = revoke) |
+| `GET /api/transactions/:txndefid` | 3rd-party pull API (bearer key) |
+| `POST /mcp` | MCP server (bearer key) |
 
 Note: `/payment/webhook` requires raw body for Stripe signature verification — mounted before `express.json()` in `server.js`.

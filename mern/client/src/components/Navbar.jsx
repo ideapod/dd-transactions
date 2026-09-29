@@ -26,6 +26,11 @@ export default function Navbar() {
       <NavLink to="/transactions" className={linkClass} end>
         Transactions
       </NavLink>
+
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-4 mb-1">Integrations</p>
+      <NavLink to="/apikeys" className={linkClass}>
+        API Keys
+      </NavLink>
     </aside>
   );
 }

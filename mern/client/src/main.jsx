@@ -11,6 +11,7 @@ import TransactionForm from "./components/TransactionForm";
 import PaymentComplete from "./components/PaymentComplete";
 import TxnDefList from "./components/TxnDefList";
 import TxnDefForm from "./components/TxnDefForm";
+import ApiKeys from "./components/ApiKeys";
 
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -59,6 +60,16 @@ const router = createBrowserRouter([
       {
         path: "/txndefs/create",
         element: <TxnDefForm />,
+      },
+    ],
+  },
+  {
+    path: "/apikeys",
+    element: <App />,
+    children: [
+      {
+        path: "/apikeys",
+        element: <ApiKeys />,
       },
     ],
   },

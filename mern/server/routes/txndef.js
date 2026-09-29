@@ -5,6 +5,8 @@ import db from "../db/connection.js";
 
 // This help convert the id from string to ObjectId for the _id.
 import { ObjectId } from "mongodb";
+import { getConnection, updateConnection, deleteConnection, assertPublicUrl } from "../lib/connections.js";
+import { deliver } from "../lib/webhook.js";
 
 // router is an instance of the express router.
 // We use it to define our routes.
@@ -33,6 +35,11 @@ router.get("/:id", async (req, res) => {
 // This section will help you create a new record.
 router.post("/", async (req, res) => {
   try {
+    if (req.body.webhook_url) await assertPublicUrl(req.body.webhook_url);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  try {
     let newDocument = {
       name: req.body.name,
       version: req.body.version,
@@ -51,6 +58,11 @@ router.post("/", async (req, res) => {
 
 // This section will help you update a record by id.
 router.patch("/:id", async (req, res) => {
+  try {
+    if (req.body.webhook_url) await assertPublicUrl(req.body.webhook_url);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
   try {
     const query = { _id: new ObjectId(req.params.id) };
     const updates = {
@@ -78,12 +90,41 @@ router.delete("/:id", async (req, res) => {
 
     const collection = db.collection("txndefs");
     let result = await collection.deleteOne(query);
+    await deleteConnection(req.params.id);
 
     res.send(result).status(200);
   } catch (err) {
     console.error(err);
     res.status(500).send("Error deleting record");
   }
+});
+
+// Outbound connection settings (webhook signing secret + custom headers).
+// Secret and header values are write-only; the signing secret is returned
+// only when it is generated.
+router.get("/:id/connection", async (req, res) => {
+  try {
+    res.json(await getConnection(req.params.id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error retrieving connection" });
+  }
+});
+
+router.put("/:id/connection", async (req, res) => {
+  try {
+    const { webhook_url, headers, rotate_secret } = req.body;
+    res.json(await updateConnection(req.params.id, { webhook_url, headers, rotate_secret }));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post("/:id/connection/test", async (req, res) => {
+  if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: "invalid id" });
+  const txndef = await db.collection("txndefs").findOne({ _id: new ObjectId(req.params.id) });
+  if (!txndef) return res.status(404).json({ error: "TxnDef not found" });
+  res.json(await deliver(txndef, "webhook.test", { test: true, sent_at: new Date().toISOString() }));
 });
 
 export default router;

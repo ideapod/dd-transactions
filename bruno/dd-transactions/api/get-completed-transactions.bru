@@ -7,12 +7,17 @@ meta {
 get {
   url: {{baseUrl}}/api/transactions/{{txnDefId}}
   body: none
-  auth: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
 }
 
 docs {
   Returns all complete and free transactions for the given TxnDef ID.
   This is the endpoint for 3rd party integrations.
+  Requires an API key with the transactions:read scope (set apiKey in the environment).
 
   Set txnDefId in the environment to the ID from the TxnDef edit page URL.
 }

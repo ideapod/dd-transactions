@@ -23,6 +23,11 @@ services:
       CLIENT_URL: http://localhost:8081
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      # Encrypts stored webhook secrets/headers. Set a long random value in .env;
+      # changing it makes existing stored secrets unreadable.
+      SECRETS_KEY: ${SECRETS_KEY:-}
+      # true allows webhook URLs on private/loopback addresses (local testing only)
+      WEBHOOK_ALLOW_PRIVATE: ${WEBHOOK_ALLOW_PRIVATE:-false}
     depends_on:
       mongo:
         condition: service_healthy

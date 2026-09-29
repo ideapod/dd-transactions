@@ -65,7 +65,11 @@ Create a `.env` file in the project root (gitignored):
 ```
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+SECRETS_KEY=<long random string>   # encrypts stored webhook secrets/headers — e.g. `openssl rand -base64 32`
+WEBHOOK_ALLOW_PRIVATE=false        # true lets webhooks target localhost/private IPs (local testing only)
 ```
+
+If `SECRETS_KEY` is unset the server uses an insecure development key and logs a warning. Changing it later makes stored webhook secrets and headers unreadable, so they would need to be configured again.
 
 ## Project structure
 
@@ -73,8 +77,10 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 mern/
   client/       React + Vite frontend (port 8081)
   server/       Express backend (port 5050)
-    routes/     txndef.js, transaction.js, payment.js
-    lib/        webhook.js — outbound webhook helper
+    routes/     txndef.js, transaction.js, payment.js, apikey.js
+    lib/        apiKeys.js, connections.js, webhook.js, secrets.js, schemaValidator.js
+    mcp/        MCP server (server.js) + schema-guide.md served to LLMs
+    scripts/    create-api-key.js
 mongo/
   restore.sh    Runs mongorestore on first container start
 dump/
@@ -125,17 +131,135 @@ The form will show a confirmation summary of collected data, then redirect to St
 
 ## 3rd-party API
 
-Retrieve completed transactions for a TxnDef (open, no auth):
+### API keys
+
+The pull API and MCP server need a bearer API key: `Authorization: Bearer ddt_...`.
+
+Issue keys from **Integrations → API Keys** in the admin UI, or from the command line (useful for the first key):
+
+```bash
+docker compose exec server node scripts/create-api-key.js --name "Claude Desktop" \
+  --scopes txndefs:read,txndefs:write,transactions:read,connections:manage
+```
+
+Add `--txndefs <id>,<id>` to limit a key to specific TxnDefs. A limited key sees nothing else and can't create new TxnDefs.
+
+| Scope | Allows |
+|---|---|
+| `txndefs:read` | List and read TxnDefs |
+| `txndefs:write` | Create and update TxnDefs |
+| `transactions:read` | Read submitted transactions (pull API + MCP) |
+| `connections:manage` | Configure outbound webhooks and their credentials |
+
+Only a SHA-256 hash of each key is stored, and the key is shown once when it's created. Revoking a key takes effect immediately.
+
+> The admin UI and its routes (`/txndef`, `/transaction`, `/apikey`) are **not yet behind a login**. Don't expose port 5050 or 8081 publicly until they are.
+
+### Pull API
 
 ```
 GET http://localhost:5050/api/transactions/:txndefid
+Authorization: Bearer ddt_...
 ```
 
-To receive a webhook when a transaction completes, set `webhook_url` on the TxnDef. The server will POST the transaction data to that URL.
+Returns `complete` and `free` transactions and needs the `transactions:read` scope.
+
+### MCP server
+
+`POST http://localhost:5050/mcp` uses the Streamable HTTP transport and the same bearer key. An LLM client can use it to author forms, read responses and wire up third-party systems. A key only gets the tools its scopes allow:
+
+| Tool | Scope |
+|---|---|
+| `get_schema_guide` | any |
+| `list_txndefs`, `get_txndef` | `txndefs:read` |
+| `create_txndef`, `update_txndef` (schemas are validated first) | `txndefs:write` |
+| `list_transactions`, `get_transaction` | `transactions:read` |
+| `get_connection`, `configure_connection`, `test_connection` | `connections:manage` |
+
+Claude Code:
+
+```bash
+claude mcp add --transport http dd-transactions http://localhost:5050/mcp --header "Authorization: Bearer ddt_..."
+```
+
+For clients that only support stdio (e.g. Claude Desktop's config file), bridge with `npx mcp-remote http://localhost:5050/mcp --header "Authorization: Bearer ddt_..."`.
+
+Example prompts once connected:
+
+- "Make a 3-step volunteer registration form with a $25 AUD fee."
+- "Show me this week's responses to the DWRS form."
+- "Send completed responses to https://crm.example.com/hooks/intake with the header `Authorization: Bearer <crm token>`, then send a test event."
+
+The server is stateless: every request builds a fresh MCP server scoped to the calling key, so `GET`/`DELETE /mcp` return 405. Each created or listed TxnDef includes a `form_url` the LLM can hand out to people who need to fill in the form.
+
+### Outbound webhooks
+
+Set a webhook URL on the TxnDef and the server POSTs a `transaction.completed` event each time a transaction completes. Configure it on the TxnDef edit page (**Outbound connection**) or with the `configure_connection` MCP tool.
+
+Each delivery is signed with a per-TxnDef secret, which is shown once when it's generated or rotated:
+
+```
+X-DDT-Event: transaction.completed
+X-DDT-Delivery: <uuid>
+X-DDT-Signature: t=<unix seconds>,v1=<hex HMAC-SHA256(secret, "<t>.<raw body>")>
+```
+
+Body:
+
+```json
+{
+  "event": "transaction.completed",
+  "delivery_id": "<uuid>",
+  "txndef_id": "...",
+  "txndef_name": "...",
+  "transaction": { "_id": "...", "name": "...", "created": 0, "modified": 0, "data": { }, "payment_amount": null, "status": "free" }
+}
+```
+
+`test_connection` and the **Send test event** button send a `webhook.test` event with the same signing.
+
+Receivers should recompute the HMAC over the raw body, compare in constant time, and reject old timestamps. Node example:
+
+```js
+import crypto from "node:crypto";
+
+function verify(rawBody, signatureHeader, secret, toleranceSeconds = 300) {
+  const parts = Object.fromEntries(signatureHeader.split(",").map((p) => p.split("=")));
+  if (Math.abs(Date.now() / 1000 - Number(parts.t)) > toleranceSeconds) return false;
+  const expected = crypto.createHmac("sha256", secret).update(`${parts.t}.${rawBody}`).digest("hex");
+  return parts.v1.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(parts.v1), Buffer.from(expected));
+}
+```
+
+Custom headers, such as an `Authorization` token for the target system, can be added too. They're stored encrypted and are never shown again. Set a header to `null` through the API or MCP, or click **remove** in the UI, to delete it.
+
+Webhook URLs must be `http(s)`. URLs that resolve to private, loopback, link-local (including cloud metadata `169.254.169.254`) or reserved addresses are rejected when saved and again before each delivery. Redirects are not followed, and deliveries time out after 10 seconds. For local testing against a receiver on your machine, set `WEBHOOK_ALLOW_PRIVATE=true`.
+
+TxnDefs whose `webhook_url` was set before signing existed have no secret, so their deliveries go out **unsigned** until you click **Generate secret** or call `configure_connection`.
+
+### Security model summary
+
+| Surface | Protection |
+|---|---|
+| `GET /api/transactions/:id` | Bearer API key with `transactions:read`, plus the key's TxnDef restriction |
+| `POST /mcp` | Bearer API key; tools filtered by scope; TxnDef restriction on every lookup |
+| `POST /payment/webhook` | Stripe signature (`STRIPE_WEBHOOK_SECRET`) |
+| Outbound webhooks | HMAC-SHA256 signature per TxnDef, optional custom auth headers, SSRF blocking |
+| Stored secrets | API keys: SHA-256 hash only. Webhook secrets and headers: AES-256-GCM with `SECRETS_KEY` |
+| Admin UI routes (`/txndef`, `/transaction`, `/apikey`, `/payment/create-checkout-session`) | **None yet.** Needs a user login (follow-up) |
+
+Known limitations:
+
+- **No admin login.** Anyone who can reach port 5050 can use the admin routes, including issuing API keys. Keep the ports private.
+- **No OAuth.** MCP clients that require OAuth 2.1, such as claude.ai custom connectors, can't connect yet. Claude Code, Claude Desktop (via `mcp-remote`) and most other clients work with a bearer header.
+- **DNS rebinding.** The SSRF check resolves the hostname before sending, but the HTTP client resolves it again. A hostile DNS server could return a public address for the check and a private one for the send. Fully closing this means pinning the checked IP in the HTTP client.
+- **No retries or delivery log.** Failed webhooks are logged to the server console and not retried.
+- **No rate limiting** on `/api` or `/mcp`.
 
 ## API collection
 
-A [Bruno](https://www.usebruno.com/) collection is in `bruno/dd-transactions/`. Open it in Bruno, select the **local** environment, and set `txnDefId` to the ID from the TxnDef edit page URL.
+A [Bruno](https://www.usebruno.com/) collection is in `bruno/dd-transactions/`. Open it in Bruno, select the **local** environment, set `txnDefId` to the ID from the TxnDef edit page URL, and set `apiKey` to a key with the `transactions:read` scope.
 
 ## Custom schema components
 

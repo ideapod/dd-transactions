@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SchemaEditor from './schema-editor/SchemaEditor';
+import ConnectionPanel from './ConnectionPanel';
     
 const serverURL = import.meta.env.VITE_SERVER_URL || "http://localhost:5050"
 
@@ -95,15 +96,20 @@ export default function TxnDefForm() {
         });
       }
 
+      if (response.status === 400) {
+        // e.g. webhook URL rejected — keep the form so the user can fix it
+        const body = await response.json().catch(() => ({}));
+        window.alert(body.error || "Could not save the transaction definition.");
+        return;
+      }
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
     } catch (error) {
       console.error('A problem occurred with your fetch operation: ', error);
-    } finally {
-      setForm({ name: "", version: "", schema: "" });
-      navigate("/txndefs");
     }
+    setForm({ name: "", version: "", schema: "" });
+    navigate("/txndefs");
   }
 
   // This following section will display the form that takes the input from the user.
@@ -171,6 +177,7 @@ export default function TxnDefForm() {
               </div>
             </div>
           </div>
+          {!isNew && <ConnectionPanel txndefId={params.id} />}
           <div>
             <label className="block text-sm font-medium leading-6 text-slate-900 mb-2">
               Schema
