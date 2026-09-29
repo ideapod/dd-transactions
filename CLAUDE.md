@@ -32,10 +32,11 @@ bruno/
 ```bash
 docker compose up --build          # build and start all services
 docker compose up --build client   # rebuild only the client (e.g. after npm install)
-docker compose down -v             # stop and wipe volumes (requires data restore after)
+docker compose down -v             # stop and wipe volumes (next `up` auto-restores dump/)
 
-# Restore data after first start or after down -v
-docker compose exec mongo mongorestore --noOptionsRestore --gzip /dump
+# Data in dump/ is restored automatically whenever the mongo volume is empty
+# (first start, or after down -v). To reset an existing volume back to the dump:
+docker compose exec mongo mongorestore --drop --noOptionsRestore --gzip /dump
 
 # Stripe webhook forwarding (separate terminal, required for payment flows)
 stripe listen --forward-to localhost:5050/payment/webhook

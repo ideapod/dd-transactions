@@ -17,13 +17,13 @@ docker compose up --build
 - Client: http://localhost:8081
 - Server: http://localhost:5050
 
-On first run, MongoDB starts empty. Restore the included data dump:
+On first run (or after `docker compose down -v`), the MongoDB volume is empty and `mongo/restore.sh` automatically restores the included data dump from `dump/`.
+
+To reset an existing volume back to the dump:
 
 ```bash
-docker compose exec mongo mongorestore --noOptionsRestore --gzip /dump
+docker compose exec mongo mongorestore --drop --noOptionsRestore --gzip /dump
 ```
-
-> If you've previously run `docker compose down -v`, the volume is wiped and you'll need to restore again.
 
 ### Backing up and restoring MongoDB
 
