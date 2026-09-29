@@ -6,3 +6,7 @@ node_modules/
 *.pem
 !global-bundle.pem
 !mern/server/global-bundle.pem
+config.env
+
+# Local MongoDB backups
+dump/backup-*.gz
